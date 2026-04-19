@@ -150,17 +150,17 @@ def sample_animation(clip: AnimationClip, time: float) -> Dict[str, Vec3]:
         wrap_end = first.time + clip.duration
         if last.time <= wrapped_time <= wrap_end and wrap_end > last.time:
             t = (wrapped_time - last.time) / (wrap_end - last.time)
-            out: Dict[str, Vec3] = {}
+            wrap_out: Dict[str, Vec3] = {}
             bones = set(last.bone_positions) | set(first.bone_positions)
             for bone in bones:
                 av = last.bone_positions.get(bone, (0.0, 0.0, 0.0))
                 bv = first.bone_positions.get(bone, av)
-                out[bone] = (
+                wrap_out[bone] = (
                     av[0] + (bv[0] - av[0]) * t,
                     av[1] + (bv[1] - av[1]) * t,
                     av[2] + (bv[2] - av[2]) * t,
                 )
-            return out
+            return wrap_out
     return dict(first.bone_positions if time < first.time else last.bone_positions)
 
 
