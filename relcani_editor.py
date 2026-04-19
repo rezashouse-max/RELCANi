@@ -165,6 +165,8 @@ class SceneObjectManager:
         self.objects[obj.object_id] = obj
 
     def get(self, object_id: str) -> SceneObject:
+        if object_id not in self.objects:
+            raise KeyError(f"Scene object '{object_id}' was not found")
         return self.objects[object_id]
 
     def move(self, object_id: str, dx: float, dy: float, dz: float) -> None:

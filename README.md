@@ -41,5 +41,5 @@ Create a model file (example):
 Run:
 
 ```bash
-python /home/runner/work/RELCANi/RELCANi/relcani_editor.py /path/to/model.relcani.json --animation idle --time 0.5
+python relcani_editor.py /path/to/model.relcani.json --animation idle --time 0.5
 ```
