@@ -256,6 +256,12 @@ def main() -> int:
     obj.move(args.move[0], args.move[1], args.move[2])
 
     if args.animation:
+        if args.animation not in model.animations:
+            available = ", ".join(sorted(model.animations)) or "<none>"
+            raise SystemExit(
+                f"Animation '{args.animation}' was not found in model '{model.name}'. "
+                f"Available animations: {available}"
+            )
         clip = model.animations[args.animation]
         sampled = sample_animation(clip, args.time)
         print(f"Sampled animation '{args.animation}' at t={args.time:.3f}: {sampled}")

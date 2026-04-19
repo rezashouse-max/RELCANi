@@ -43,7 +43,7 @@ class RelcaniEditorTests(unittest.TestCase):
                 }
             ],
         }
-        tmp = tempfile.NamedTemporaryFile("w", suffix=".relcani.json", delete=False)
+        tmp = tempfile.NamedTemporaryFile("w", suffix=".relcani.json", delete=False, encoding="utf-8")
         tmp.write(json.dumps(model_data))
         tmp.flush()
         tmp.close()
