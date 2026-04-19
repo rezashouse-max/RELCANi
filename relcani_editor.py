@@ -115,34 +115,53 @@ class ProprietaryModelLoader:
 def sample_animation(clip: AnimationClip, time: float) -> Dict[str, Vec3]:
     if not clip.keyframes:
         return {}
+    keyframes = clip.keyframes
+    first = keyframes[0]
+    last = keyframes[-1]
+    if len(keyframes) == 1:
+        return dict(first.bone_positions)
     if clip.duration > 0:
         time = time % clip.duration
 
-    if time <= clip.keyframes[0].time:
-        return dict(clip.keyframes[0].bone_positions)
-    if time >= clip.keyframes[-1].time:
-        return dict(clip.keyframes[-1].bone_positions)
+    if first.time <= time <= last.time:
+        for i in range(len(keyframes) - 1):
+            a = keyframes[i]
+            b = keyframes[i + 1]
+            if a.time <= time <= b.time:
+                span = b.time - a.time
+                if span <= 0:
+                    return dict(b.bone_positions)
+                t = (time - a.time) / span
+                out: Dict[str, Vec3] = {}
+                bones = set(a.bone_positions) | set(b.bone_positions)
+                for bone in bones:
+                    av = a.bone_positions.get(bone, (0.0, 0.0, 0.0))
+                    bv = b.bone_positions.get(bone, av)
+                    out[bone] = (
+                        av[0] + (bv[0] - av[0]) * t,
+                        av[1] + (bv[1] - av[1]) * t,
+                        av[2] + (bv[2] - av[2]) * t,
+                    )
+                return out
 
-    for i in range(len(clip.keyframes) - 1):
-        a = clip.keyframes[i]
-        b = clip.keyframes[i + 1]
-        if a.time <= time <= b.time:
-            span = b.time - a.time
-            if span <= 0:
-                return dict(b.bone_positions)
-            t = (time - a.time) / span
+    if clip.duration > 0:
+        # Interpolate across the wrap segment from the last keyframe to the first keyframe.
+        wrapped_time = time if time >= last.time else time + clip.duration
+        wrap_end = first.time + clip.duration
+        if last.time <= wrapped_time <= wrap_end and wrap_end > last.time:
+            t = (wrapped_time - last.time) / (wrap_end - last.time)
             out: Dict[str, Vec3] = {}
-            bones = set(a.bone_positions) | set(b.bone_positions)
+            bones = set(last.bone_positions) | set(first.bone_positions)
             for bone in bones:
-                av = a.bone_positions.get(bone, (0.0, 0.0, 0.0))
-                bv = b.bone_positions.get(bone, av)
+                av = last.bone_positions.get(bone, (0.0, 0.0, 0.0))
+                bv = first.bone_positions.get(bone, av)
                 out[bone] = (
                     av[0] + (bv[0] - av[0]) * t,
                     av[1] + (bv[1] - av[1]) * t,
                     av[2] + (bv[2] - av[2]) * t,
                 )
             return out
-    return dict(clip.keyframes[-1].bone_positions)
+    return dict(first.bone_positions if time < first.time else last.bone_positions)
 
 
 @dataclass
@@ -179,8 +198,12 @@ class Timeline:
     current_time: float = 0.0
     playing: bool = False
 
+    def __post_init__(self) -> None:
+        if self.duration < 0:
+            self.duration = 0.0
+
     def set_time(self, value: float) -> None:
-        self.current_time = min(max(value, 0.0), self.duration if self.duration > 0 else 0.0)
+        self.current_time = min(max(value, 0.0), self.duration)
 
     def play(self) -> None:
         self.playing = True

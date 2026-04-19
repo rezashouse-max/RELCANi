@@ -3,7 +3,15 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from relcani_editor import ProprietaryModelLoader, SceneObject, Timeline, ViewportRenderer, sample_animation
+from relcani_editor import (
+    AnimationClip,
+    AnimationKeyframe,
+    ProprietaryModelLoader,
+    SceneObject,
+    Timeline,
+    ViewportRenderer,
+    sample_animation,
+)
 
 
 class RelcaniEditorTests(unittest.TestCase):
@@ -71,6 +79,21 @@ class RelcaniEditorTests(unittest.TestCase):
         obj.move(5.0, 0.0, 0.0)
         after = viewport.render_ascii(obj)
         self.assertNotEqual(before, after)
+
+    def test_animation_sampling_supports_wrap_segment(self) -> None:
+        path = self._write_model()
+        model = ProprietaryModelLoader.load(path)
+        base_clip = model.animations["walk"]
+        clip = AnimationClip(
+            name=base_clip.name,
+            duration=2.0,
+            keyframes=(
+                AnimationKeyframe(time=0.5, bone_positions={"root": (0.5, 0.0, 0.0)}),
+                AnimationKeyframe(time=1.5, bone_positions={"root": (1.5, 0.0, 0.0)}),
+            ),
+        )
+        sampled = sample_animation(clip, 0.0)
+        self.assertAlmostEqual(sampled["root"][0], 1.0, places=6)
 
 
 if __name__ == "__main__":
