@@ -259,7 +259,7 @@ def make_cube(name: str = "Cube", size: float = 1.0) -> Model:
     h = size / 2.0
     positions: Tuple[Vec3, ...] = (
         (-h, -h, -h), (h, -h, -h), (h, h, -h), (-h, h, -h),
-        (-h, -h, h),  (h, -h, h),  (h, h, h),  (-h, h, h),
+        (-h, -h, h), (h, -h, h), (h, h, h), (-h, h, h),
     )
     return Model(
         name=name,
